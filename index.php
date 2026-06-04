@@ -645,7 +645,7 @@ asort($filieres);
                 <label>Modules concernés * — cochez les modules que vous n'avez pas pu passer :</label>
                 <div class="modules-grid" id="modulesGrid">
                     <?php foreach ($_SESSION['modules'] as $mod): ?>
-                    <div class="module-item" onclick="toggleModule(this)">
+                    <div class="module-item">
                         <input type="checkbox" name="modules[]"
                                value="<?php echo htmlspecialchars($mod['cod_elp']); ?>"
                                id="mod_<?php echo htmlspecialchars($mod['cod_elp']); ?>">
@@ -738,38 +738,32 @@ asort($filieres);
 ?>
 var MAX_MODULES = <?php echo $max; ?>;
 
-function toggleModule(el) {
-    var cb = el.querySelector('input[type="checkbox"]');
-    if (cb.checked) {
-        cb.checked = false;
-        el.classList.remove('selected');
-    } else {
-        var checked = document.querySelectorAll('#modulesGrid input:checked').length;
-        if (checked >= MAX_MODULES) {
-            alert('Vous ne pouvez sélectionner que ' + MAX_MODULES + ' module(s) maximum.');
-            return;
-        }
-        cb.checked = true;
-        el.classList.add('selected');
-    }
-}
+// Only the checkbox drives state — the card click just forwards to the checkbox
+document.querySelectorAll('#modulesGrid .module-item').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+        // If click originated from checkbox or its label, let the browser handle it natively
+        if (e.target.type === 'checkbox' || e.target.tagName === 'LABEL') return;
+        // Click on any other part of the card: manually toggle
+        var cb = card.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change'));
+    });
+});
 
-// Prevent double-click on checkboxes triggering toggleModule twice
-document.querySelectorAll('#modulesGrid input').forEach(function(cb) {
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
+document.querySelectorAll('#modulesGrid input[type="checkbox"]').forEach(function(cb) {
     cb.addEventListener('change', function() {
-        var el = this.closest('.module-item');
+        var card = this.closest('.module-item');
         if (this.checked) {
             var checked = document.querySelectorAll('#modulesGrid input:checked').length;
             if (checked > MAX_MODULES) {
                 this.checked = false;
-                el.classList.remove('selected');
+                card.classList.remove('selected');
                 alert('Vous ne pouvez sélectionner que ' + MAX_MODULES + ' module(s) maximum.');
                 return;
             }
-            el.classList.add('selected');
+            card.classList.add('selected');
         } else {
-            el.classList.remove('selected');
+            card.classList.remove('selected');
         }
     });
 });

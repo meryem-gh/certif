@@ -62,11 +62,7 @@ if ($authenticated && isset($_GET['export'])) {
         $params[':dat']       = $_GET['filtre_date'];
     }
 
-    $sql = 'SELECT d.*, i.DATE_NAI_IND, i.COD_EXT_GPE
-            FROM demandes d
-            LEFT JOIN inscriptions i ON i.cod_etu = d.cod_etu AND i.cod_elp = (
-                SELECT cod_elp FROM inscriptions WHERE cod_etu = d.cod_etu LIMIT 1
-            )
+    $sql = 'SELECT d.* FROM demandes d
             WHERE ' . implode(' AND ', $where) . '
             ORDER BY d.nom, d.prenom';
     $stmt = $db->prepare($sql);
@@ -84,20 +80,15 @@ if ($authenticated && isset($_GET['export'])) {
             $ms->execute(array(':e' => $dem['cod_etu'], ':m' => $cod_elp));
             $mod = $ms->fetch(PDO::FETCH_ASSOC);
 
-            // Fetch date of birth
-            $ds = $db->prepare('SELECT DATE_NAI_IND FROM inscriptions WHERE cod_etu = :e LIMIT 1');
-            $ds->execute(array(':e' => $dem['cod_etu']));
-            $dob_row = $ds->fetch(PDO::FETCH_ASSOC);
-
             $rows[] = array(
                 'COD_ETU'        => $dem['cod_etu'],
                 'LIB_NOM_PAT_IND'=> $dem['nom'],
                 'LIB_PR1_IND'    => $dem['prenom'],
-                'DATE_NAI_IND'   => $dob_row ? $dob_row['DATE_NAI_IND'] : '',
+                'DATE_NAI_IND'   => '',  // non stocké dans la base locale
                 'COD_ELP'        => $cod_elp,
                 'LIB_ELP'        => $mod ? $mod['lib_elp'] : '',
                 'COD_EXT_GPE'    => $mod ? $mod['cod_ext_gpe'] : '',
-                'COD_TRE'        => '',   // empty — session rattrapage
+                'COD_TRE'        => '',
             );
         }
     }
